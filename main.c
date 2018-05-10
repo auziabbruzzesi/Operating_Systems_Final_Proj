@@ -2,6 +2,25 @@
 #include<stdlib.h>
 #define STRING_SIZE 1024
 
+typedef struct{
+  //make job
+}Job;
+
+typedef struct {
+  //make queue
+}Queue;
+
+typedef struct{
+  //make node
+}Node;
+
+//EnqueueSJF
+//EnqueueFIFO
+//Dequeue
+
+//makeJob
+
+//makeNode
 
 
 
