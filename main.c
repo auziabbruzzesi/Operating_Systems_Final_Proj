@@ -23,26 +23,7 @@ typedef struct{
 //makeNode
 
 
-
-
-
-int main(int argc, char ** argv){
-  char filename[STRING_SIZE];
-  FILE *file;
-  file = fopen(filename, "r");
-  size_t buffer = STRING_SIZE;
-  char * line = (char*)malloc(STRING_SIZE*sizeof(char));
-  
-  
-  getline(&line,&buffer,file);
-  printf("enter config. file name: \n");
-  scanf("%s", filename);
-
-  printf("%s",line);
-
-  //TODO write parse function to parse the text file
-
-
+//Banker's algorithm
 
 void parse(File * file){
   //while file newline stuff
@@ -59,6 +40,21 @@ void parse(File * file){
     //system_status()
   
 }
- 
+
+int main(int argc, char ** argv){
+  char filename[STRING_SIZE];
+  FILE *file;
+  file = fopen(filename, "r");
+  size_t buffer = STRING_SIZE;
+  char * line = (char*)malloc(STRING_SIZE*sizeof(char));
+  
+  
+  getline(&line,&buffer,file);
+  printf("enter config. file name: \n");
+  scanf("%s", filename);
+
+  printf("%s",line);
+
+  //TODO write parse function to parse the text file
 
 }
