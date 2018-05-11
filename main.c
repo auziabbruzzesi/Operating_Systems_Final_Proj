@@ -5,7 +5,12 @@
 #define STRING_SIZE 1024
 
 typedef struct{
-  //make job
+  int start_time;
+  int job_num;
+  int priority;
+  int memory_req;
+  int device_req;
+   
 }Job;
 
 typedef struct {
@@ -52,36 +57,64 @@ void parse(char * line){
   int J; 
   int R;
   int P;
+  int D;
   switch(line[0]){
     case 'C':
-      
-      printf("this is a config line!\n");
+      //printf("this is a config line!\n");
       params = strtok(line,"C ");
       //printf("params: %s\n", params);
-      printf("%s\n",params);
-      
-      printf("parameter line: %s\n",params);
       start_time = atoi(params);
-      params = strtok(params,"C M= S= Q= ");
+      params = strtok(NULL,"C M= S= Q= ");
       M = atoi(params);
-      params = strtok(params,"C M= S= Q= ");
+      params = strtok(NULL,"C M= S= Q= ");
       S = atoi(params);
-      params = strtok(params,"C M= S= Q= ");
+      params = strtok(NULL,"C M= S= Q= ");
       Q = atoi(params);
-      params = strtok(params,"C M= S= Q= ");
+      params = strtok(NULL,"C M= S= Q= ");
       printf("Start time = %d, M = %d, S = %d, Q = %d\n", start_time, M, S, Q);
-
-      
-      
-      
+      break;
     case 'A':
-      printf("this is a job arrival\n");
+      //printf("this is a job arrival\n");
+      params = strtok(line,"A ");
+      start_time = atoi(params);
+      params = strtok(NULL,"A J= M= S= R= P= ");
+      J = atoi(params);
+      params = strtok(NULL,"A J= M= S= R= P= ");
+      M = atoi(params);
+      params = strtok(NULL,"A J= M= S= R= P= ");
+      S = atoi(params);
+      params = strtok(NULL,"A J= M= S= R= P= ");
+      R = atoi(params);
+      params = strtok(NULL,"A J= M= S= R= P= ");
+      P = atoi(params);
+      printf("job arrival start time = %d, J = %d, M = %d, S = %d, R = %d, P = %d\n",start_time, J, M, S, R, P);
+      break;
     case 'Q':
-      printf("this is a device request\n");
+      //printf("this is a device request\n");
+      params = strtok(line,"Q ");
+      start_time = atoi(params);
+      params = strtok(NULL,"Q J= D= ");
+      J = atoi(params);
+      params = strtok(NULL,"Q J= D= ");
+      D = atoi(params);
+      printf("Device request start time = %d, J = %d, D = %d\n",start_time, J, D);
+      break;
     case 'L':
-      printf("This is a device release\n");
+      //printf("This is a device release\n");
+      params = strtok(line,"L ");
+      start_time = atoi(params);
+      params = strtok(NULL,"L J= D= ");
+      J = atoi(params);
+      params = strtok(NULL,"L J= D= ");
+      D = atoi(params);
+      printf("Device release start time = %d, J = %d, D = %d\n",start_time, J, D);
+      break;
     case 'D':
-      printf("this is a system status\n");
+      params = strtok(line,"D ");
+      start_time = atoi(params);
+      printf("system status time %d\n",start_time);
+                
+      //printf("this is a system status\n");
   }
 
   
@@ -108,6 +141,7 @@ int main(int argc, char ** argv){
   if(file){
     while(getline(&line,&buffer,file)>=0){
       parse(line);
+
 
     }
 
