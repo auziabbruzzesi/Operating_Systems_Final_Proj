@@ -12,6 +12,7 @@ typedef struct{
   int priority;
   int memory_req;
   int device_req;
+  int job_time;
    
 }Job;
 
@@ -22,7 +23,7 @@ typedef struct Node {
 
 
 void addJob(struct Node** head_ref, int start_time_in, int job_num_in, 
-            int priority_in, int memory_req_in, int device_req_in)
+            int priority_in, int memory_req_in, int device_req_in, int job_time_in)
 {
     /* 1. allocate node */
     struct Node* new_node = (struct Node*) malloc(sizeof(struct Node));
@@ -35,6 +36,7 @@ void addJob(struct Node** head_ref, int start_time_in, int job_num_in,
     new_node->data.priority = priority_in;
     new_node->data.memory_req = memory_req_in;
     new_node->data.device_req = device_req_in;
+    new_node->data.job_time = job_time_in;
  
     /* 3. This new node is going to be the last node, so make next of
           it as NULL*/
@@ -62,11 +64,83 @@ void printQueue(struct Node *node)
  
   while (node != NULL)
   {
-     printf("Job number %d has start time: %d \npriority: %d \nmempry_req: %d \ndevice_req: %d \n\n", node->data.job_num, 
-            node->data.start_time, node->data.priority, node->data.memory_req, node->data.device_req);
+     printf("Job number %d has start time: %d \npriority: %d \nmempry_req: %d \ndevice_req: %d \njob_time: %d\n\n", 
+     node->data.job_num, node->data.start_time, node->data.priority, node->data.memory_req, node->data.device_req, 
+     node->data.job_time);
+
      node = node->pNext;
   }
 }
+
+/* Methods for Sorting Linked Lists */
+// function to swap nodes 'currX' and 'currY' in a
+// linked list without swapping data
+void swapNodes(struct Node** head_ref, struct Node* currX,
+  struct Node* currY, struct Node* prevY)
+{
+// make 'currY' as new head
+*head_ref = currY;
+
+// adjust links
+prevY->pNext = currX;
+
+// Swap next pointers
+struct Node* temp = currY->pNext;
+currY->pNext = currX->pNext;
+currX->pNext = temp;
+}
+
+/*Sort queue for SJF */
+
+struct Node* recurSelectionSort(struct Node* head){
+// if there is only a single node
+if (head->pNext == NULL)
+return head;
+
+// 'min' - pointer to store the node having
+// minimum data value
+struct Node* min = head;
+
+// 'beforeMin' - pointer to store node previous
+// to 'min' node
+struct Node* beforeMin = NULL;
+struct Node* ptr;
+
+// traverse the list till the last node
+for (ptr = head; ptr->pNext != NULL; ptr = ptr->pNext) {
+
+// if true, then update 'min' and 'beforeMin'
+if (ptr->pNext->data.job_time < min->data.job_time) {
+min = ptr->pNext;
+beforeMin = ptr;
+}
+}
+
+// if 'min' and 'head' are not same,
+// swap the head node with the 'min' node
+if (min != head)
+swapNodes(&head, head, min, beforeMin);
+
+// recursively sort the remaining list
+head->pNext = recurSelectionSort(head->pNext);
+
+return head;
+}
+
+// function to sort the given linked list
+void sort(struct Node** head_ref)
+{
+// if list is empty
+if ((*head_ref) == NULL)
+return;
+
+// sort the list using recursive selection
+// sort technique
+*head_ref = recurSelectionSort(*head_ref);
+}
+
+
+
 
 
 //EnqueueSJF
@@ -199,13 +273,17 @@ int main(int argc, char ** argv){
   First make empty queue..*/
   struct Node* head = NULL;
   /*Add Job!*/
-  addJob(&head, 10, 1, 3, 500, 200);
+  addJob(&head, 10, 1, 3, 500, 200, 10);
   /*And Another!*/
-  addJob(&head, 10, 2, 8, 400, 100);
-  /* Print Jobs*/
+  addJob(&head, 10, 2, 8, 400, 100, 5);
+  /* Print Jobs Unsorted*/
+  printf("Jobs Are not Sorted.\n");
   printQueue(head);
-
-
+  /*Sort!*/
+  sort(&head);
+  /*Print Jobs Sorted*/
+  printf("Jobs Are now Sorted!\n");
+  printQueue(head);
 
 
 
