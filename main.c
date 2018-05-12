@@ -15,13 +15,59 @@ typedef struct{
    
 }Job;
 
-typedef struct {
-  //make queue
-}Queue;
+typedef struct Node {
+  Job data;           /*  --> Changes done here */
+  struct Node *pNext; /* Reference to the next node address */
+} NODE;
 
-typedef struct{
-  //make node
-}Node;
+
+void addJob(struct Node** head_ref, int start_time_in, int job_num_in, 
+            int priority_in, int memory_req_in, int device_req_in)
+{
+    /* 1. allocate node */
+    struct Node* new_node = (struct Node*) malloc(sizeof(struct Node));
+ 
+    struct Node *last = *head_ref;  /* used in step 5*/
+ 
+    /* 2. put in the data  */
+    new_node->data.start_time  = start_time_in;
+    new_node->data.job_num = job_num_in;
+    new_node->data.priority = priority_in;
+    new_node->data.memory_req = memory_req_in;
+    new_node->data.device_req = device_req_in;
+ 
+    /* 3. This new node is going to be the last node, so make next of
+          it as NULL*/
+    new_node->pNext = NULL;
+ 
+    /* 4. If the Linked List is empty, then make the new node as head */
+    if (*head_ref == NULL)
+    {
+       *head_ref = new_node;
+       return;
+    }
+ 
+    /* 5. Else traverse till the last node */
+    while (last->pNext != NULL)
+        last = last->pNext;
+ 
+    /* 6. Change the next of last node */
+    last->pNext = new_node;
+    return;
+}
+ 
+// This function prints contents of linked list starting from head
+void printQueue(struct Node *node)
+{
+ 
+  while (node != NULL)
+  {
+     printf("Job number %d has start time: %d \npriority: %d \nmempry_req: %d \ndevice_req: %d \n\n", node->data.job_num, 
+            node->data.start_time, node->data.priority, node->data.memory_req, node->data.device_req);
+     node = node->pNext;
+  }
+}
+
 
 //EnqueueSJF
 //EnqueueFIFO
@@ -133,6 +179,7 @@ void parse(char * line){
 }
 
 int main(int argc, char ** argv){
+  /*
   char filename[STRING_SIZE];
   printf("enter config. file name: \n");
   scanf("%s", filename);
@@ -146,7 +193,17 @@ int main(int argc, char ** argv){
 
 
     }
+  */
 
+  /*Test Queue!
+  First make empty queue..*/
+  struct Node* head = NULL;
+  /*Add Job!*/
+  addJob(&head, 10, 1, 3, 500, 200);
+  /*And Another!*/
+  addJob(&head, 10, 2, 8, 400, 100);
+  /* Print Jobs*/
+  printQueue(head);
 
 
 
@@ -164,4 +221,3 @@ int main(int argc, char ** argv){
 
   //TODO write parse function to parse the text file
 
-}
