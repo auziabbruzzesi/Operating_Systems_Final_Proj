@@ -3,6 +3,11 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+//global variable declarations
+int current_time;
+int main_memory;          //might need 2 variables, one for available memory and total main memory.
+int num_devices;
+int time_quantum;
 
 #define STRING_SIZE 1024
 //change comment
@@ -147,32 +152,32 @@ return;
 //EnqueueFIFO
 //Dequeue
 
-//makeJob
-
+void acceptJob(int start_time_in, int job_num_in,int priority_in,
+               int memory_req_in, int device_req_in, int job_time_in ){
+  printf("accepting a job!\n");
+               
+               
+}
+               
 //makeNode
 
 
 //Banker's algorithm
 
 void config(int start_time, int M, int S, int Q){
-  //TODO
+  current_time = start_time;
+  main_memory = M;
+  num_devices = S;
+  time_quantum = Q;
 }
 
 void parse(char * line){
  // printf("parsing line: %s\n", line);
   
   char * cmd_type;
-  const char config = 'C';
-  const char job_arrival = 'A';
-  const char device_request = 'Q';
-  const char device_release = 'L';
-  const char system_status = 'D';
   int start_time;
   char * params;
   char * vals;
-  //printf("first char: %c\n",line[0]);
-  //while file newline stuff
-  
   int M;
   int S;
   int Q;
@@ -181,6 +186,12 @@ void parse(char * line){
   int P;
   int D;
   switch(line[0]){
+
+    /*
+    *
+    *config
+    *
+    */
     case 'C':
       //printf("this is a config line!\n");
       params = strtok(line,"C ");
@@ -194,7 +205,16 @@ void parse(char * line){
       Q = atoi(params);
       params = strtok(NULL,"C M= S= Q= ");
       printf("Start time = %d, M = %d, S = %d, Q = %d\n", start_time, M, S, Q);
+
+      config(start_time,M,S,Q);
       break;
+
+
+    /*
+    *
+    *Job arrival
+    *
+    */
     case 'A':
       //printf("this is a job arrival\n");
       params = strtok(line,"A ");
@@ -210,6 +230,7 @@ void parse(char * line){
       params = strtok(NULL,"A J= M= S= R= P= ");
       P = atoi(params);
       printf("job arrival start time = %d, J = %d, M = %d, S = %d, R = %d, P = %d\n",start_time, J, M, S, R, P);
+      acceptJob(start_time,J,M,S,R,P);
       break;
     case 'Q':
       //printf("this is a device request\n");
@@ -253,7 +274,7 @@ void parse(char * line){
 }
 
 int main(int argc, char ** argv){
-  /*
+  
   char filename[STRING_SIZE];
   printf("enter config. file name: \n");
   scanf("%s", filename);
@@ -266,25 +287,26 @@ int main(int argc, char ** argv){
       parse(line);
 
 
+
     }
-  */
+  
 
-  /*Test Queue!
-  First make empty queue..*/
-  struct Node* head = NULL;
-  /*Add Job!*/
-  addJob(&head, 10, 1, 3, 500, 200, 10);
-  /*And Another!*/
-  addJob(&head, 10, 2, 8, 400, 100, 5);
-  /* Print Jobs Unsorted*/
-  printf("Jobs Are not Sorted.\n");
-  printQueue(head);
-  /*Sort!*/
-  sort(&head);
-  /*Print Jobs Sorted*/
-  printf("Jobs Are now Sorted!\n");
-  printQueue(head);
-
+  // /*Test Queue!
+  // First make empty queue..*/
+  // struct Node* head = NULL;
+  // /*Add Job!*/
+  // addJob(&head, 10, 1, 3, 500, 200, 10);
+  // /*And Another!*/
+  // addJob(&head, 10, 2, 8, 400, 100, 5);
+  // /* Print Jobs Unsorted*/
+  // printf("Jobs Are not Sorted.\n");
+  // printQueue(head);
+  // /*Sort!*/
+  // sort(&head);
+  // /*Print Jobs Sorted*/
+  // printf("Jobs Are now Sorted!\n");
+  // printQueue(head);
+  }
 
 
 
@@ -297,5 +319,5 @@ int main(int argc, char ** argv){
 
   
 
-  //TODO write parse function to parse the text file
+
 
