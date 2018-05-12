@@ -8,9 +8,12 @@ int current_time;
 int main_memory;          //might need 2 variables, one for available memory and total main memory.
 int num_devices;
 int time_quantum;
-
 #define STRING_SIZE 1024
-//change comment
+/*
+*
+*STRUCTS
+*
+*/
 typedef struct{
   int start_time;
   int job_num;
