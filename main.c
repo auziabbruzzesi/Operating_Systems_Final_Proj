@@ -10,9 +10,7 @@ int num_devices;
 int time_quantum;
 #define STRING_SIZE 1024
 /*
-*
 *STRUCTS
-*
 */
 typedef struct{
   int start_time;
@@ -23,16 +21,15 @@ typedef struct{
   int job_time;
    
 }Job;
-
 typedef struct Node {
   Job data;           /*  --> Changes done here */
   struct Node *pNext; /* Reference to the next node address */
 } NODE;
-
-
+/*
+*Linked List Queue implementation
+*/
 void addJob(struct Node** head_ref, int start_time_in, int job_num_in, 
-            int priority_in, int memory_req_in, int device_req_in, int job_time_in)
-{
+            int priority_in, int memory_req_in, int device_req_in, int job_time_in){
     /* 1. allocate node */
     struct Node* new_node = (struct Node*) malloc(sizeof(struct Node));
  
@@ -65,10 +62,7 @@ void addJob(struct Node** head_ref, int start_time_in, int job_num_in,
     last->pNext = new_node;
     return;
 }
- 
-// This function prints contents of linked list starting from head
-void printQueue(struct Node *node)
-{
+void printQueue(struct Node *node){
  
   while (node != NULL)
   {
@@ -79,101 +73,82 @@ void printQueue(struct Node *node)
      node = node->pNext;
   }
 }
-
-/* Methods for Sorting Linked Lists */
-// function to swap nodes 'currX' and 'currY' in a
-// linked list without swapping data
 void swapNodes(struct Node** head_ref, struct Node* currX,
-  struct Node* currY, struct Node* prevY)
-{
-// make 'currY' as new head
-*head_ref = currY;
+               struct Node* currY, struct Node* prevY){
+  /* Methods for Sorting Linked Lists */
+  // function to swap nodes 'currX' and 'currY' in a
+  // linked list without swapping data
+  // make 'currY' as new head
+  *head_ref = currY;
 
-// adjust links
-prevY->pNext = currX;
+  // adjust links
+  prevY->pNext = currX;
 
-// Swap next pointers
-struct Node* temp = currY->pNext;
-currY->pNext = currX->pNext;
-currX->pNext = temp;
+  // Swap next pointers
+  struct Node* temp = currY->pNext;
+  currY->pNext = currX->pNext;
+  currX->pNext = temp;
 }
-
-/*Sort queue for SJF */
-
 struct Node* recurSelectionSort(struct Node* head){
-// if there is only a single node
-if (head->pNext == NULL)
-return head;
+  /*Sort queue for SJF */
+  // if there is only a single node
+  if (head->pNext == NULL)
+  return head;
 
-// 'min' - pointer to store the node having
-// minimum data value
-struct Node* min = head;
+  // 'min' - pointer to store the node having
+  // minimum data value
+  struct Node* min = head;
 
-// 'beforeMin' - pointer to store node previous
-// to 'min' node
-struct Node* beforeMin = NULL;
-struct Node* ptr;
+  // 'beforeMin' - pointer to store node previous
+  // to 'min' node
+  struct Node* beforeMin = NULL;
+  struct Node* ptr;
 
-// traverse the list till the last node
-for (ptr = head; ptr->pNext != NULL; ptr = ptr->pNext) {
+  // traverse the list till the last node
+  for (ptr = head; ptr->pNext != NULL; ptr = ptr->pNext) {
 
-// if true, then update 'min' and 'beforeMin'
-if (ptr->pNext->data.job_time < min->data.job_time) {
-min = ptr->pNext;
-beforeMin = ptr;
+    // if true, then update 'min' and 'beforeMin'
+    if (ptr->pNext->data.job_time < min->data.job_time) {
+    min = ptr->pNext;
+    beforeMin = ptr;
+    }
+  }
+
+  // if 'min' and 'head' are not same,
+  // swap the head node with the 'min' node
+  if (min != head)
+   swapNodes(&head, head, min, beforeMin);
+
+  // recursively sort the remaining list
+  head->pNext = recurSelectionSort(head->pNext);
+
+  return head;
 }
+void sort(struct Node** head_ref){
+  // function to sort the given linked list
+  // if list is empty
+  if ((*head_ref) == NULL)
+  return;
+
+  // sort the list using recursive selection
+  // sort technique
+  *head_ref = recurSelectionSort(*head_ref);
 }
-
-// if 'min' and 'head' are not same,
-// swap the head node with the 'min' node
-if (min != head)
-swapNodes(&head, head, min, beforeMin);
-
-// recursively sort the remaining list
-head->pNext = recurSelectionSort(head->pNext);
-
-return head;
-}
-
-// function to sort the given linked list
-void sort(struct Node** head_ref)
-{
-// if list is empty
-if ((*head_ref) == NULL)
-return;
-
-// sort the list using recursive selection
-// sort technique
-*head_ref = recurSelectionSort(*head_ref);
-}
-
-
-
-
-
-//EnqueueSJF
-//EnqueueFIFO
-//Dequeue
-
-void acceptJob(int start_time_in, int job_num_in,int priority_in,
-               int memory_req_in, int device_req_in, int job_time_in ){
-  printf("accepting a job!\n");
-               
-               
-}
-               
-//makeNode
-
-
-//Banker's algorithm
-
+/*
+*External Event handlers
+*/
 void config(int start_time, int M, int S, int Q){
   current_time = start_time;
   main_memory = M;
   num_devices = S;
   time_quantum = Q;
 }
-
+void acceptJob(int start_time_in, int job_num_in,int priority_in,
+               int memory_req_in, int device_req_in, int job_time_in ){
+  printf("accepting a job!\n");
+               
+               
+}
 void parse(char * line){
  // printf("parsing line: %s\n", line);
   
@@ -276,6 +251,9 @@ void parse(char * line){
   
 }
 
+/*
+*MAIN
+*/
 int main(int argc, char ** argv){
   
   char filename[STRING_SIZE];
