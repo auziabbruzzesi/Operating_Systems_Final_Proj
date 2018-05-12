@@ -1,14 +1,18 @@
-//Jacob McConomy
-
+/*
+*Jacob McConomy, Austin Abbruzzesi
+*Operating Systems Final Project
+*/
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-//global variable declarations
+/*
+*Global variable declarations
+*/
+#define STRING_SIZE 1024
 int current_time;
 int main_memory;          //might need 2 variables, one for available memory and total main memory.
 int num_devices;
 int time_quantum;
-#define STRING_SIZE 1024
 /*
 *STRUCTS
 */
@@ -250,7 +254,6 @@ void parse(char * line){
     //system_status()
   
 }
-
 /*
 *MAIN
 */
