@@ -170,9 +170,7 @@ void parse(char * line){
   switch(line[0]){
 
     /*
-    *
     *config
-    *
     */
     case 'C':
       //printf("this is a config line!\n");
@@ -190,12 +188,8 @@ void parse(char * line){
 
       config(start_time,M,S,Q);
       break;
-
-
     /*
-    *
     *Job arrival
-    *
     */
     case 'A':
       //printf("this is a job arrival\n");
