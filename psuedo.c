@@ -7,7 +7,7 @@ while(next_time > 0){
 //if we can finish our quantum by the time the next task comes in,
 //and we can finish executing the entire job before the next task comes in
 if(RdyQ->front->j->quantum_left <= next_time && RdyQ->front-j->run_time <= RdyQ->front->j->quantum_left){
-    next_time -= RdyQ->front->j->run_time; //subtract the run time from next time
+    next_time -= RdyQ->front->j->run_time; //we finish the job before the quantum is over. next job gets a full quantum, may not finiish by the next job, but that's for the next iteration of the loop
     available_memory += RdyQ->front->j->memory_needed; //give back resources
     available_devices+ += RdyQ->front->j->devices_allocated;
     enqueue(completeQ,dequeue(RdyQ));//move the job to the complete Queue
