@@ -1,301 +1,218 @@
-/*
-*Jacob McConomy, Austin Abbruzzesi
-*Operating Systems Final Project
-*/
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-/*
-*Global variable declarations
-*/
+#include<ctype.h>
 #define STRING_SIZE 1024
-int current_time;
-int main_memory;          //might need 2 variables, one for available memory and total main memory.
-int num_devices;
-int time_quantum;
-/*
-*STRUCTS
-*/
+int curr_time;
+int total_memory;
+int available_memory;
+int total_devices;
+int available_devices;
+int quantum_time;
+int next_time;
+
 typedef struct{
-  int start_time;
-  int job_num;
-  int priority;
-  int memory_req;
-  int device_req;
-  int job_time;
-   
+    int job_num;
+    int memory_needed;
+    int max_device;
+    int runtime_left;
+    int priority;
+    int isrunning;
 }Job;
-typedef struct Node {
-  Job data;           /*  --> Changes done here */
-  struct Node *pNext; /* Reference to the next node address */
-} NODE;
-/*
-*Linked List Queue implementation
-*/
-void addJob(struct Node** head_ref, int start_time_in, int job_num_in, 
-            int priority_in, int memory_req_in, int device_req_in, int job_time_in){
-    /* 1. allocate node */
-    struct Node* new_node = (struct Node*) malloc(sizeof(struct Node));
- 
-    struct Node *last = *head_ref;  /* used in step 5*/
- 
-    /* 2. put in the data  */
-    new_node->data.start_time  = start_time_in;
-    new_node->data.job_num = job_num_in;
-    new_node->data.priority = priority_in;
-    new_node->data.memory_req = memory_req_in;
-    new_node->data.device_req = device_req_in;
-    new_node->data.job_time = job_time_in;
- 
-    /* 3. This new node is going to be the last node, so make next of
-          it as NULL*/
-    new_node->pNext = NULL;
- 
-    /* 4. If the Linked List is empty, then make the new node as head */
-    if (*head_ref == NULL)
-    {
-       *head_ref = new_node;
-       return;
+struct Node{
+    Job * j;
+    struct Node * next;
+}Node;
+typedef struct{
+    struct Node * front;
+    struct Node * rear;
+}Queue;
+
+Job * create_job(){
+    Job * j = (Job*)malloc(sizeof(Job));
+    return j;
+}
+struct Node * create_node(){
+    struct Node * n = (struct Node*)malloc(sizeof(struct Node));
+    return n;
+}
+
+Queue * create_queue(){
+    Queue * q = (Queue*)malloc(sizeof(Queue));
+    return q;
+}
+
+void enqueue(Queue * q, Job * j){
+    struct Node * temp = create_node();
+    temp->j = j;
+    
+    if(q->front == NULL){
+        q->front = q->rear = temp;
     }
- 
-    /* 5. Else traverse till the last node */
-    while (last->pNext != NULL)
-        last = last->pNext;
- 
-    /* 6. Change the next of last node */
-    last->pNext = new_node;
-    return;
+    q->rear->next = temp;
+    q->rear = temp;
+    q->rear->next = NULL;
+    
+
 }
-void printQueue(struct Node *node){
- 
-  while (node != NULL)
-  {
-     printf("Job number %d has start time: %d \npriority: %d \nmempry_req: %d \ndevice_req: %d \njob_time: %d\n\n", 
-     node->data.job_num, node->data.start_time, node->data.priority, node->data.memory_req, node->data.device_req, 
-     node->data.job_time);
 
-     node = node->pNext;
-  }
+struct Node * dequeue (Queue * q){
+    if (q->front == NULL)
+       return NULL;
+    struct Node *temp = q->front;
+    q->front = q->front->next;
+    if (q->front == NULL)
+       q->rear = NULL;
+    return temp;
 }
-void swapNodes(struct Node** head_ref, struct Node* currX,
-               struct Node* currY, struct Node* prevY){
-  /* Methods for Sorting Linked Lists */
-  // function to swap nodes 'currX' and 'currY' in a
-  // linked list without swapping data
-  // make 'currY' as new head
-  *head_ref = currY;
 
-  // adjust links
-  prevY->pNext = currX;
+void print_queue(Queue * q){
+    struct Node * curr = q->front;
+    while(curr != NULL){
+        printf("---------------------\n");
+        printf("job_num: %d ", curr->j->job_num);
+        printf("job_mem: %d ", curr->j->memory_needed);
+        printf("job_max_dev: %d ", curr->j->max_device);
+        printf("run_time_left: %d ", curr->j->runtime_left);
+        printf("job_priority: %d ", curr->j->priority);
+        printf("\n---------------------\n");
+        curr = curr->next;
 
-  // Swap next pointers
-  struct Node* temp = currY->pNext;
-  currY->pNext = currX->pNext;
-  currX->pNext = temp;
-}
-struct Node* recurSelectionSort(struct Node* head){
-  /*Sort queue for SJF */
-  // if there is only a single node
-  if (head->pNext == NULL)
-  return head;
-
-  // 'min' - pointer to store the node having
-  // minimum data value
-  struct Node* min = head;
-
-  // 'beforeMin' - pointer to store node previous
-  // to 'min' node
-  struct Node* beforeMin = NULL;
-  struct Node* ptr;
-
-  // traverse the list till the last node
-  for (ptr = head; ptr->pNext != NULL; ptr = ptr->pNext) {
-
-    // if true, then update 'min' and 'beforeMin'
-    if (ptr->pNext->data.job_time < min->data.job_time) {
-    min = ptr->pNext;
-    beforeMin = ptr;
     }
-  }
-
-  // if 'min' and 'head' are not same,
-  // swap the head node with the 'min' node
-  if (min != head)
-   swapNodes(&head, head, min, beforeMin);
-
-  // recursively sort the remaining list
-  head->pNext = recurSelectionSort(head->pNext);
-
-  return head;
 }
-void sort(struct Node** head_ref){
-  // function to sort the given linked list
-  // if list is empty
-  if ((*head_ref) == NULL)
-  return;
 
-  // sort the list using recursive selection
-  // sort technique
-  *head_ref = recurSelectionSort(*head_ref);
-}
-/*
-*External Event handlers
-*/
-void config(int start_time, int M, int S, int Q){
-  current_time = start_time;
-  main_memory = M;
-  num_devices = S;
-  time_quantum = Q;
-}
-void acceptJob(int start_time_in, int job_num_in,int priority_in,
-               int memory_req_in, int device_req_in, int job_time_in ){
-  printf("accepting a job!\n");
-               
-               
-}
-void parse(char * line){
- // printf("parsing line: %s\n", line);
-  
-  char * cmd_type;
-  int start_time;
-  char * params;
-  char * vals;
-  int M;
-  int S;
-  int Q;
-  int J; 
-  int R;
-  int P;
-  int D;
-  switch(line[0]){
+void print_array(int * arr,int size){
+    int i;
+    for(i = 0; i < size; i++){
+        printf("%d ",arr[i]);
 
-    /*
-    *config
-    */
-    case 'C':
-      //printf("this is a config line!\n");
-      params = strtok(line,"C ");
-      //printf("params: %s\n", params);
-      start_time = atoi(params);
-      params = strtok(NULL,"C M= S= Q= ");
-      M = atoi(params);
-      params = strtok(NULL,"C M= S= Q= ");
-      S = atoi(params);
-      params = strtok(NULL,"C M= S= Q= ");
-      Q = atoi(params);
-      params = strtok(NULL,"C M= S= Q= ");
-      printf("Start time = %d, M = %d, S = %d, Q = %d\n", start_time, M, S, Q);
-
-      config(start_time,M,S,Q);
-      break;
-    /*
-    *Job arrival
-    */
-    case 'A':
-      //printf("this is a job arrival\n");
-      params = strtok(line,"A ");
-      start_time = atoi(params);
-      params = strtok(NULL,"A J= M= S= R= P= ");
-      J = atoi(params);
-      params = strtok(NULL,"A J= M= S= R= P= ");
-      M = atoi(params);
-      params = strtok(NULL,"A J= M= S= R= P= ");
-      S = atoi(params);
-      params = strtok(NULL,"A J= M= S= R= P= ");
-      R = atoi(params);
-      params = strtok(NULL,"A J= M= S= R= P= ");
-      P = atoi(params);
-      printf("job arrival start time = %d, J = %d, M = %d, S = %d, R = %d, P = %d\n",start_time, J, M, S, R, P);
-      acceptJob(start_time,J,M,S,R,P);
-      break;
-    case 'Q':
-      //printf("this is a device request\n");
-      params = strtok(line,"Q ");
-      start_time = atoi(params);
-      params = strtok(NULL,"Q J= D= ");
-      J = atoi(params);
-      params = strtok(NULL,"Q J= D= ");
-      D = atoi(params);
-      printf("Device request start time = %d, J = %d, D = %d\n",start_time, J, D);
-      break;
-    case 'L':
-      //printf("This is a device release\n");
-      params = strtok(line,"L ");
-      start_time = atoi(params);
-      params = strtok(NULL,"L J= D= ");
-      J = atoi(params);
-      params = strtok(NULL,"L J= D= ");
-      D = atoi(params);
-      printf("Device release start time = %d, J = %d, D = %d\n",start_time, J, D);
-      break;
-    case 'D':
-      params = strtok(line,"D ");
-      start_time = atoi(params);
-      printf("system status time %d\n",start_time);
-                
-      //printf("this is a system status\n");
-  }
-
-  
-    //config(params);
-  //if job line:
-    //new_job(params)
-  //if device request
-    //device_request(params)
-  //if release device request
-    //device_release(params)
-  //if system status
-    //system_status()
-  
+    }
+    printf("\n");
 }
-/*
-*MAIN
-*/
+int get_num(char * string){
+    int i; 
+    for(i = 0; i<strlen(string); i++){
+        if isdigit(string[i]){
+            //printf("digit: %d\n",atoi(&string[i]));
+            return atoi(&string[i]);
+        }
+    }
+}
+void return_args (char * line,int * args){
+    char * params;
+    int * arguments;
+
+    params = strtok(line,"C A Q L D "); //strip type name off of it
+    //printf("args line: %s\n",params);
+    int i = 0;
+    while(params != NULL){
+        //printf("args line: %s\n",params);
+        //printf("digit %d\n", get_num(params));
+        args[i] = get_num(params);
+        i+=1;
+        params = strtok(NULL," ");
+        
+    }
+
+}
 int main(int argc, char ** argv){
-  
-  char filename[STRING_SIZE];
-  printf("enter config. file name: \n");
-  scanf("%s", filename);
-  FILE *file;
-  file = fopen(filename, "r");
-  size_t buffer = STRING_SIZE;
-  char * line = (char*)malloc(STRING_SIZE*sizeof(char));
-  if(file){
-    while(getline(&line,&buffer,file)>=0){
-      parse(line);
+    Queue * submit_q = create_queue();
+    Queue * hold_q1 = create_queue();
+    Queue * hold_q2 = create_queue();
+    Queue * rdy_q = create_queue();
+    Queue * waitq = create_queue();
+    Queue * complete_q = create_queue();
 
+    char filename[STRING_SIZE];
+    printf("enter config. file name: \n");
+    scanf("%s", filename);
+    FILE * file;
+    FILE * file2;
+    file = fopen(filename, "r");
+    file2 = fopen(filename, "r");
+    size_t buffer = STRING_SIZE;
+    size_t buffer2 = STRING_SIZE;
+    char * line = (char*)malloc(STRING_SIZE*sizeof(char));
+    char * line2 = (char*)malloc(STRING_SIZE*sizeof(char));
+    if(file){
+        getline(&line2,&buffer2,file2);
+        while(getline(&line,&buffer,file)>=0){
+            getline(&line2,&buffer2,file2);
+            printf("line: %s", line);
+            //printf("line2: %s\n",line2);
+            int * attributes;
+            if(line[0] == 'C'){
+                attributes = (int*)malloc(sizeof(int)*4);
+                return_args(line,attributes);
+                //print_array(attributes,4);
+                curr_time = attributes[0];
+                total_memory = available_memory = attributes[1];
+                total_devices = available_devices = attributes[2];
+                quantum_time = attributes[3];
+            }
+            else if (line[0] == 'A'){
+                attributes = (int*)malloc(sizeof(int)*5);
+                return_args(line,attributes);
+                //printf("here: %d\n", attributes[0]);
+                //print_array(attributes,6);
+                if(attributes[2]<total_memory || attributes[3]<total_devices){
+                    Job * j = create_job();
+                    j->job_num = attributes[1];
+                    j->memory_needed = attributes[2];
+                    j->max_device = attributes[3];
+                    j->runtime_left = attributes[4];
+                    j->priority = attributes[5];
+                    printf("memory needed: %d\n memory avail: %d\n", j->memory_needed,available_memory);
+                    if(j->memory_needed > available_memory && j->priority == 1){
+                        //printf("adding to hq1\n");
+                        enqueue(hold_q1,j);
+                    }
+                    else if(j->memory_needed > available_memory && j->priority == 2){
+                        //printf("adding to hq2\n");
+                        enqueue(hold_q2,j);
+                    }
+                    else if(j->memory_needed < available_memory){
+                        //printf("adding to ready\n");
+                        enqueue(rdy_q,j);   //add to the ready queue
+                        available_memory -= j->memory_needed; //allocate memory
+                    }
+                }else{printf("here\n");}
 
-
+            }
+            else if(line[0] == 'Q'){
+                attributes = (int*)malloc(sizeof(int)*3);
+                return_args(line,attributes);
+                //print_array(attributes,3);
+            }
+            else if(line[0] == 'L'){
+                attributes = (int*)malloc(sizeof(int)*3);
+                return_args(line,attributes);
+                //print_array(attributes,3);
+            }
+            else if(line[0] == 'D'){
+                attributes = (int*)malloc(sizeof(int));
+                return_args(line,attributes);
+                //print_array(attributes,1);
+            }
+        
+    // printf("--------------------statistics-------------------------\n");
+    // printf("curr_time: %d\navailable_memory: %d\navailable_devices: %d\nnext_time: %d\n", curr_time,available_memory,available_devices,next_time);
+    // printf("hold_q1: \n");
+     print_queue(hold_q1); 
+    // printf("hold_q1: \n");
+    // print_queue(hold_q2); 
+    // printf("readyq: \n");
+    // print_queue(rdy_q); 
+    // printf("wait: \n");
+    // print_queue(waitq); 
     }
-  
-
-  // /*Test Queue!
-  // First make empty queue..*/
-  // struct Node* head = NULL;
-  // /*Add Job!*/
-  // addJob(&head, 10, 1, 3, 500, 200, 10);
-  // /*And Another!*/
-  // addJob(&head, 10, 2, 8, 400, 100, 5);
-  // /* Print Jobs Unsorted*/
-  // printf("Jobs Are not Sorted.\n");
-  // printQueue(head);
-  // /*Sort!*/
-  // sort(&head);
-  // /*Print Jobs Sorted*/
-  // printf("Jobs Are now Sorted!\n");
-  // printQueue(head);
-  }
+        
+        
+    }
 
 
-
-  }
-  
-  
-  
-  
-  
-
-  
+    
+}
 
 
 
