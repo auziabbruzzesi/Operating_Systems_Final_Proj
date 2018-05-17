@@ -20,4 +20,16 @@ else if(RdyQ->front->j->quantum_left <= next_time && RdyQ->front->j->run_time > 
     RdyQ->front->j->quantum_left = quantum_time//quantum_time is a global variable
     enqueue(RdyQ,dequeue(RdyQ)); //pop of the queue and move it to the back of the line.
 }
+
+//quantum won't be finished by the time the next task comes in
+//but our job will finish within this quantum
+else if(RdyQ->front->j->quantum_left > next_time && RdyQ->front->j->run_time <= RdyQ->front->j->quantum_left){
+    //TODO
+}
+
+//the quantum won't be finished by the time the next task comes in 
+//also our job won't be done executing by the time the quantum eventually finishes
+else if(RdyQ->front->j->quantum_left > next_time && RdyQ->front->j->run_time > RdyQ->front->j->quantum_left){
+    //TODO
+    
 }
