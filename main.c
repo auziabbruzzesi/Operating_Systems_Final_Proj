@@ -9,7 +9,7 @@ int available_memory;
 int total_devices;
 int available_devices;
 int quantum_time;
-int next_time;
+int next_time; // the time between now, and when the next thing arrives
 
 typedef struct{
     int job_num;
@@ -98,6 +98,15 @@ int get_num(char * string){
         }
     }
 }
+int get_time(char * string){
+    char * time;
+    char * new_string = (char*)malloc(STRING_SIZE);
+    strcpy(new_string,string);
+    time = strtok(new_string,"C A Q L D ");
+    return atoi(time);
+    
+    
+}
 void return_args (char * line,int * args){
     char * params;
     int * arguments;
@@ -136,33 +145,31 @@ int main(int argc, char ** argv){
     char * line2 = (char*)malloc(STRING_SIZE*sizeof(char));
     if(file){
         getline(&line2,&buffer2,file2);
-        while(getline(&line,&buffer,file)>=0){
-            getline(&line2,&buffer2,file2);
-            printf("line: %s", line);
-            //printf("line2: %s\n",line2);
+        while(getline(&line,&buffer,file)>=0){      //GET NEXT TASK
+            getline(&line2,&buffer2,file2);         //GET TASK AFTER
+            curr_time = get_time(line);             //START TIME OF CURRENT TASK
+            next_time = get_time(line2) - curr_time; //TIME BETWEEN THIS TASK AND THE NEXT
             int * attributes;
-            if(line[0] == 'C'){
+            if(line[0] == 'C'){                     //CONFIG JOB
                 attributes = (int*)malloc(sizeof(int)*4);
                 return_args(line,attributes);
-                //print_array(attributes,4);
                 curr_time = attributes[0];
                 total_memory = available_memory = attributes[1];
                 total_devices = available_devices = attributes[2];
                 quantum_time = attributes[3];
             }
-            else if (line[0] == 'A'){
+            else if (line[0] == 'A'){                   //JOB ARRIVAL
                 attributes = (int*)malloc(sizeof(int)*5);
                 return_args(line,attributes);
-                //printf("here: %d\n", attributes[0]);
-                //print_array(attributes,6);
-                if(attributes[2]<total_memory || attributes[3]<total_devices){
+                
+                if(attributes[2]<total_memory || attributes[3]<total_devices){ //ONLY MAKE A JOB IF THERE ARE ENOUGH TOTAL RESOURCES
                     Job * j = create_job();
                     j->job_num = attributes[1];
                     j->memory_needed = attributes[2];
                     j->max_device = attributes[3];
                     j->runtime_left = attributes[4];
                     j->priority = attributes[5];
-                    printf("memory needed: %d\n memory avail: %d\n", j->memory_needed,available_memory);
+
                     if(j->memory_needed > available_memory && j->priority == 1){
                         //printf("adding to hq1\n");
                         enqueue(hold_q1,j);                 //THIS NEEDS TO BE THE SJF ENQUEUE
@@ -176,15 +183,16 @@ int main(int argc, char ** argv){
                         enqueue(rdy_q,j);   //add to the ready queue
                         available_memory -= j->memory_needed; //allocate memory
                     }
-                }else{printf("here\n");}
+                }else{printf("job rejected\n");
+                    }
 
             }
-            else if(line[0] == 'Q'){
+            else if(line[0] == 'Q'){                        //TODO
                 attributes = (int*)malloc(sizeof(int)*3);
                 return_args(line,attributes);
                 //print_array(attributes,3);
             }
-            else if(line[0] == 'L'){
+            else if(line[0] == 'L'){                        //TODO   
                 attributes = (int*)malloc(sizeof(int)*3);
                 return_args(line,attributes);
                 //print_array(attributes,3);
@@ -193,12 +201,17 @@ int main(int argc, char ** argv){
                 attributes = (int*)malloc(sizeof(int));
                 return_args(line,attributes);
                 //print_array(attributes,1);
+            }else{
+                printf("error. invalid line in file\n");
             }
+
+
+            //NEXT WE NEED TO GO TO THE FRONT OF THE READY QUEUE AND IMPLEMENT THAT PART. SEE THE PSUEDO_CODE FILE!!!
         
     // printf("--------------------statistics-------------------------\n");
     // printf("curr_time: %d\navailable_memory: %d\navailable_devices: %d\nnext_time: %d\n", curr_time,available_memory,available_devices,next_time);
     // printf("hold_q1: \n");
-     print_queue(hold_q1); 
+    //  print_queue(hold_q1); 
     // printf("hold_q1: \n");
     // print_queue(hold_q2); 
     // printf("readyq: \n");
