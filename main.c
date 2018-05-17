@@ -165,7 +165,7 @@ int main(int argc, char ** argv){
                     printf("memory needed: %d\n memory avail: %d\n", j->memory_needed,available_memory);
                     if(j->memory_needed > available_memory && j->priority == 1){
                         //printf("adding to hq1\n");
-                        enqueue(hold_q1,j);
+                        enqueue(hold_q1,j);                 //THIS NEEDS TO BE THE SJF ENQUEUE
                     }
                     else if(j->memory_needed > available_memory && j->priority == 2){
                         //printf("adding to hq2\n");
