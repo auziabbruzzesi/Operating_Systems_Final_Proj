@@ -5,7 +5,7 @@ while(next_time > 0){
 
 //NOTE: next_time is the amount of time until the next_time, it's not the actual next time
 //if we can finish our quantum by the time the next task comes in,
-//and we can finish the entire job before the next task comes in
+//and we can finish executing the entire job before the next task comes in
 if(RdyQ->front->j->quantum_left <= next_time && RdyQ->front-j->run_time <= RdyQ->front->j->quantum_left){
     next_time -= RdyQ->front->j->run_time; //subtract the run time from next time
     available_memory += RdyQ->front->j->memory_needed; //give back resources
