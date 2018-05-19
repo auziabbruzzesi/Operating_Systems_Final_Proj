@@ -172,7 +172,8 @@ int main(int argc, char ** argv){
 
                     if(j->memory_needed > available_memory && j->priority == 1){
                         //printf("adding to hq1\n");
-                        enqueue(hold_q1,j);                 //THIS NEEDS TO BE THE SJF ENQUEUE
+                        enqueue(hold_q1,j);
+                        sort(&hold_q1);                //Sorts SJF
                     }
                     else if(j->memory_needed > available_memory && j->priority == 2){
                         //printf("adding to hq2\n");
