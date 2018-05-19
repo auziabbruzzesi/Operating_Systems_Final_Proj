@@ -54,13 +54,13 @@ while(next_time > 0){
 if(job_released){
 
     
-            while(available_memory >= holdQ1->front->jmemory_needed && available_devices >= holdQ1->front->max_device &&
+            while(available_memory >= holdQ1->front->j->memory_needed && available_devices >= holdQ1->front->max_device &&
                 holdQ1->front->j!=NULL){
             enqueue(RdyQ,dequeue(Hold1Q));
             }
 
     else{
-            while(available_memory >= holdQ2->front->jmemory_needed && available_devices >= holdQ2->front->max_device &&
+            while(available_memory >= holdQ2->front->j->memory_needed && available_devices >= holdQ2->front->max_device &&
                 holdQ2->front->j!=NULL){
             enqueue(RdyQ,dequeue(Hold2Q));
             }

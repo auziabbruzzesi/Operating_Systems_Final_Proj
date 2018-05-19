@@ -17,7 +17,8 @@ typedef struct{
     int max_device;
     int runtime_left;
     int priority;
-    int isrunning;
+    int quantum_left;
+    int devices_allocated;
 }Job;
 struct Node{
     Job * j;
@@ -64,6 +65,67 @@ struct Node * dequeue (Queue * q){
     if (q->front == NULL)
        q->rear = NULL;
     return temp;
+}
+void swapNodes(struct Node** head_ref, struct Node* currX,
+               struct Node* currY, struct Node* prevY){
+  /* Methods for Sorting Linked Lists */
+  // function to swap nodes 'currX' and 'currY' in a
+  // linked list without swapping data
+  // make 'currY' as new head
+  *head_ref = currY;
+
+  // adjust links
+  prevY->next = currX;
+
+  // Swap next pointers
+  struct Node* temp = currY->next;
+  currY->next = currX->next;
+  currX->next = temp;
+}
+struct Node* recurSelectionSort(struct Node* head){
+  /*Sort queue for SJF */
+  // if there is only a single node
+  if (head->next == NULL)
+  return head;
+
+  // 'min' - pointer to store the node having
+  // minimum data value
+  struct Node* min = head;
+
+  // 'beforeMin' - pointer to store node previous
+  // to 'min' node
+  struct Node* beforeMin = NULL;
+  struct Node* ptr;
+
+  // traverse the list till the last node
+  for (ptr = head; ptr->next != NULL; ptr = ptr->next) {
+
+    // if true, then update 'min' and 'beforeMin'
+    if (ptr->next->j->runtime_left < min->j->runtime_left) {
+    min = ptr->next;
+    beforeMin = ptr;
+    }
+  }
+
+  // if 'min' and 'head' are not same,
+  // swap the head node with the 'min' node
+  if (min != head)
+   swapNodes(&head, head, min, beforeMin);
+
+  // recursively sort the remaining list
+  head->next = recurSelectionSort(head->next);
+
+  return head;
+}
+void sort(struct Node** head_ref){
+  // function to sort the given linked list
+  // if list is empty
+  if ((*head_ref) == NULL)
+  return;
+
+  // sort the list using recursive selection
+  // sort technique
+  *head_ref = recurSelectionSort(*head_ref);
 }
 
 void print_queue(Queue * q){
@@ -125,6 +187,7 @@ void return_args (char * line,int * args){
 
 }
 int main(int argc, char ** argv){
+
     Queue * submit_q = create_queue();
     Queue * hold_q1 = create_queue();
     Queue * hold_q2 = create_queue();
@@ -173,7 +236,7 @@ int main(int argc, char ** argv){
                     if(j->memory_needed > available_memory && j->priority == 1){
                         //printf("adding to hq1\n");
                         enqueue(hold_q1,j);
-                        sort(&hold_q1);                //Sorts SJF
+                        sort(&(hold_q1->front));                //Sorts SJF
                     }
                     else if(j->memory_needed > available_memory && j->priority == 2){
                         //printf("adding to hq2\n");
@@ -196,6 +259,7 @@ int main(int argc, char ** argv){
             else if(line[0] == 'L'){                        //TODO   
                 attributes = (int*)malloc(sizeof(int)*3);
                 return_args(line,attributes);
+
                 //print_array(attributes,3);
             }
             else if(line[0] == 'D'){
@@ -211,9 +275,11 @@ int main(int argc, char ** argv){
         
     // printf("--------------------statistics-------------------------\n");
     // printf("curr_time: %d\navailable_memory: %d\navailable_devices: %d\nnext_time: %d\n", curr_time,available_memory,available_devices,next_time);
-    // printf("hold_q1: \n");
-    //  print_queue(hold_q1); 
-    // printf("hold_q1: \n");
+    printf("/////////////////////////////////////////////\n");
+    printf("hold_q1: \n");
+    printf("/////////////////////////////////////////////\n");
+    print_queue(hold_q1); 
+   // printf("hold_q1: \n");
     // print_queue(hold_q2); 
     // printf("readyq: \n");
     // print_queue(rdy_q); 
