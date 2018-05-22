@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<ctype.h>
-#define STRING_SIZE 1024
+#define STRING_SIZE 1000000
 int curr_time;
 int total_memory;
 int available_memory;
@@ -11,6 +11,9 @@ int available_devices;
 int quantum_time;
 int next_time; // the time between now, and when the next thing arrives
 int job_released = 0;
+
+
+char buffer[100000];
 
 typedef struct{
     int job_num;
@@ -38,6 +41,24 @@ struct Node * create_node(){
     struct Node * n = (struct Node*)malloc(sizeof(struct Node));
     return n;
 }
+char * print_queue(Queue * q, char * buffer){
+    int offset = 0;
+    struct Node * curr = q->front;
+    offset+=snprintf(buffer+offset,STRING_SIZE-offset,"[");
+    while(curr != NULL){
+       // printf("here\n");
+        if(curr->next!= NULL){
+            offset += snprintf(buffer+offset,STRING_SIZE-offset,"%d,",curr->j->job_num);
+           // printf("here: %d\n",curr->next->j->job_num);
+        }else{
+            offset += snprintf(buffer+offset,STRING_SIZE-offset,"%d",curr->j->job_num);
+        }
+       curr = curr->next;
+    }
+    offset += snprintf(buffer+offset,STRING_SIZE-offset,"]");
+    //printf("here too\n");
+    return buffer;
+}
 
 Queue * create_queue(){
     Queue * q = (Queue*)malloc(sizeof(Queue));
@@ -45,6 +66,7 @@ Queue * create_queue(){
 }
 
 void enqueue(Queue * q, Job * j){
+   // printf("before enqueue: %s\n", print_queue(q,buffer));
     struct Node * temp = create_node();
     temp->j = j;
     
@@ -54,6 +76,9 @@ void enqueue(Queue * q, Job * j){
     q->rear->next = temp;
     q->rear = temp;
     q->rear->next = NULL;
+    //printf("after enqueue: %s\n", print_queue(q,buffer));
+
+
     
 
 }
@@ -65,6 +90,7 @@ struct Node * dequeue (Queue * q){
     q->front = q->front->next;
     if (q->front == NULL)
        q->rear = NULL;
+    
     return temp;
 }
 void swapNodes(struct Node** head_ref, struct Node* currX,
@@ -129,21 +155,6 @@ void sort(struct Node** head_ref){
   *head_ref = recurSelectionSort(*head_ref);
 }
 
-char * print_queue(Queue * q, char * buffer){
-    int offset = 0;
-    struct Node * curr = q->front;
-    offset+=snprintf(buffer+offset,sizeof(buffer)-offset,"[");
-    while(curr != NULL){
-        if(curr->next != NULL){
-            offset += snprintf(buffer+offset,sizeof(buffer)-offset,"%d,",q->front->j->job_num);
-        }else{
-
-            offset += snprintf(buffer+offset,sizeof(buffer)-offset,"%d",q->front->j->job_num);
-        }
-    }
-    offset+=snprintf(buffer+offset,sizeof(buffer)-offset,"]");
-    return buffer;
-}
 
 void print_array(int * arr,int size){
     int i;
@@ -230,7 +241,7 @@ int main(int argc, char ** argv){
                 printf("A\n");
                 attributes = (int*)malloc(sizeof(int)*5);
                 return_args(line,attributes);
-                
+                print_array(attributes,5);
                 if(attributes[2]<total_memory && attributes[3]<total_devices){ //ONLY MAKE A JOB IF THERE ARE ENOUGH TOTAL RESOURCES
                     Job * j = create_job();
                     j->job_num = attributes[1];
@@ -238,21 +249,21 @@ int main(int argc, char ** argv){
                     j->max_device = attributes[3];
                     j->runtime_left = attributes[4];
                     j->priority = attributes[5];
-
+                    //printf("enqueuing job %d in all_jobs\n", j->job_num);
                     enqueue(all_jobs,j);
-
-
-
                     if(j->memory_needed > available_memory && j->priority == 1){
                         //printf("adding to hq1\n");
+                        //printf("enqueuing job %d in hold q1\n", j->job_num);
                         enqueue(hold_q1,j);
                         //sort(&(hold_q1->front));                //Sorts SJF
                     }
                     else if(j->memory_needed > available_memory && j->priority == 2){
                         //printf("adding to hq2\n");
+                        //printf("enqueuing job %d in hold q1\n", j->job_num);
                         enqueue(hold_q2,j);
                     }
                     else if(j->memory_needed < available_memory){
+                        //printf("enqueueing job %d in ready_q\n",j->job_num);
                         //printf("adding to ready\n");
                         enqueue(rdy_q,j);   //add to the ready queue
                         available_memory -= j->memory_needed; //allocate memory
@@ -264,7 +275,10 @@ int main(int argc, char ** argv){
             else if(line[0] == 'Q'){                        //TODO
                 printf("Q\n");
                 attributes = (int*)malloc(sizeof(int)*3);
+
                 return_args(line,attributes);
+                available_devices -= attributes[2];
+                rdy_q->front->j->devices_allocated += attributes[2];
                 //print_array(attributes,3);
             }
             else if(line[0] == 'L'){
@@ -278,23 +292,28 @@ int main(int argc, char ** argv){
                 printf("D\n");
                 attributes = (int*)malloc(sizeof(int));
                 return_args(line,attributes);
+                
+                
                 //print_array(attributes,1);
             }else{
                 printf("error. invalid line in file\n");
             }
         while(rdy_q->front!= NULL && next_time > 0 ){
             if(next_time > 1)
-                printf("next_time: %d\n",next_time);
+               // printf("next_time: %d\n",next_time);
             if(job_released){
                 while(hold_q1->front != NULL && available_memory >= hold_q1->front->j->memory_needed && available_devices >= hold_q1->front->j->max_device){
+                    //printf("enqueuing job %d in rdy_q from hq_1\n", hold_q1->front->j->job_num);
                     enqueue(rdy_q,dequeue(hold_q1)->j);
                 }
 
                 while(hold_q2->front != NULL && available_memory >= hold_q2->front->j->memory_needed && available_devices >= hold_q2->front->j->max_device){
+                    //printf("enqueuing job %d in rdy_q from hq_2\n", hold_q2->front->j->job_num);
                     enqueue(rdy_q,dequeue(hold_q2)->j);
                 }
 
                 while(waitq->front != NULL && available_devices >= waitq->front->j->max_device){
+                    //printf("enqueuing job %d in rdy_q from wait_q\n", waitq->front->j->job_num);
                     enqueue(rdy_q,dequeue(waitq)->j);
                 }
                 job_released = 0;
@@ -307,6 +326,7 @@ int main(int argc, char ** argv){
                 available_memory += rdy_q->front->j->memory_needed;
                 available_devices += rdy_q->front->j->devices_allocated;
                 job_released = 1;
+                //printf("enqueuing job %d in complete q from rdy_q\n", rdy_q->front->j->job_num);
                 enqueue(complete_q,dequeue(rdy_q)->j);
             }
             /*if we can finish the quantum before the next task comes in
@@ -315,6 +335,7 @@ int main(int argc, char ** argv){
                 next_time -= rdy_q->front->j->quantum_left;
                 rdy_q->front->j->runtime_left -= quantum_time;
                 rdy_q->front->j->quantum_left = quantum_time;
+                //printf("enqueuing job %d in rdy from rdy_q\n", rdy_q->front->j->job_num);
                 enqueue(rdy_q,dequeue(rdy_q)->j);
             }
             else if(  rdy_q->front->j->quantum_left > next_time){
@@ -329,7 +350,13 @@ int main(int argc, char ** argv){
 
 
         }
-        
+        char buffer[STRING_SIZE];
+        printf("rdy: %s\n",print_queue(rdy_q,buffer));
+        printf("hq1: %s\n",print_queue(hold_q1,buffer));
+        printf("hq2: %s\n",print_queue(hold_q2 ,buffer));
+        printf("waitq: %s\n",print_queue(waitq,buffer));
+         printf("completeq: %s\n",print_queue(complete_q,buffer));
+
 
     }
         
