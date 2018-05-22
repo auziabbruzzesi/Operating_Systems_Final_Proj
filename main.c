@@ -197,6 +197,8 @@ int main(int argc, char ** argv){
     Queue * waitq = create_queue();
     Queue * complete_q = create_queue();
 
+    Queue * all_jobs = create_queue();
+
     char filename[STRING_SIZE];
     printf("enter config. file name: \n");
     scanf("%s", filename);
@@ -216,6 +218,7 @@ int main(int argc, char ** argv){
             next_time = get_time(line2) - curr_time; //TIME BETWEEN THIS TASK AND THE NEXT
             int * attributes;
             if(line[0] == 'C'){                     //CONFIG JOB
+                printf("C\n");
                 attributes = (int*)malloc(sizeof(int)*4);
                 return_args(line,attributes);
                 curr_time = attributes[0];
@@ -224,16 +227,21 @@ int main(int argc, char ** argv){
                 quantum_time = attributes[3];
             }
             else if (line[0] == 'A'){                   //JOB ARRIVAL
+                printf("A\n");
                 attributes = (int*)malloc(sizeof(int)*5);
                 return_args(line,attributes);
                 
-                if(attributes[2]<total_memory || attributes[3]<total_devices){ //ONLY MAKE A JOB IF THERE ARE ENOUGH TOTAL RESOURCES
+                if(attributes[2]<total_memory && attributes[3]<total_devices){ //ONLY MAKE A JOB IF THERE ARE ENOUGH TOTAL RESOURCES
                     Job * j = create_job();
                     j->job_num = attributes[1];
                     j->memory_needed = attributes[2];
                     j->max_device = attributes[3];
                     j->runtime_left = attributes[4];
                     j->priority = attributes[5];
+
+                    enqueue(all_jobs,j);
+
+
 
                     if(j->memory_needed > available_memory && j->priority == 1){
                         //printf("adding to hq1\n");
@@ -254,25 +262,44 @@ int main(int argc, char ** argv){
 
             }
             else if(line[0] == 'Q'){                        //TODO
+                printf("Q\n");
                 attributes = (int*)malloc(sizeof(int)*3);
                 return_args(line,attributes);
                 //print_array(attributes,3);
             }
-            else if(line[0] == 'L'){                        //TODO   
+            else if(line[0] == 'L'){
+                printf("L\n");                        //TODO   
                 attributes = (int*)malloc(sizeof(int)*3);
                 return_args(line,attributes);
 
                 //print_array(attributes,3);
             }
             else if(line[0] == 'D'){
+                printf("D\n");
                 attributes = (int*)malloc(sizeof(int));
                 return_args(line,attributes);
                 //print_array(attributes,1);
             }else{
                 printf("error. invalid line in file\n");
             }
-        printf("enter\n");
-        while(rdy_q->front!= NULL && next_time>0){
+        while(rdy_q->front!= NULL && next_time > 0 ){
+            if(next_time > 1)
+                printf("next_time: %d\n",next_time);
+            if(job_released){
+                while(hold_q1->front != NULL && available_memory >= hold_q1->front->j->memory_needed && available_devices >= hold_q1->front->j->max_device){
+                    enqueue(rdy_q,dequeue(hold_q1)->j);
+                }
+
+                while(hold_q2->front != NULL && available_memory >= hold_q2->front->j->memory_needed && available_devices >= hold_q2->front->j->max_device){
+                    enqueue(rdy_q,dequeue(hold_q2)->j);
+                }
+
+                while(waitq->front != NULL && available_devices >= waitq->front->j->max_device){
+                    enqueue(rdy_q,dequeue(waitq)->j);
+                }
+                job_released = 0;
+            }
+            
         /*if we can finish our quantum by the time the next task comes in,
         and we can finish executing the entire job before the next task comes in */
             if(rdy_q->front != NULL && rdy_q->front->j->quantum_left <= next_time && rdy_q->front->j->runtime_left <= rdy_q->front->j->quantum_left){
@@ -286,36 +313,23 @@ int main(int argc, char ** argv){
              but our job won't finish executing in one quantum*/
             else if(rdy_q->front != NULL && rdy_q->front->j->quantum_left <= next_time && rdy_q->front->j->runtime_left > rdy_q->front->j->quantum_left){
                 next_time -= rdy_q->front->j->quantum_left;
-                rdy_q->front->j->runtime_left = quantum_time;
+                rdy_q->front->j->runtime_left -= quantum_time;
+                rdy_q->front->j->quantum_left = quantum_time;
                 enqueue(rdy_q,dequeue(rdy_q)->j);
             }
-            else if( rdy_q->front != NULL && rdy_q->front->j->quantum_left > next_time ){
+            else if(  rdy_q->front->j->quantum_left > next_time){
                 rdy_q->front->j->runtime_left -= next_time;
                 rdy_q->front->j->quantum_left -= next_time;
                 next_time = 0;
             }
-            if(job_released){
-                printf("enter1\n");
-                while(hold_q1->front != NULL && available_memory >= hold_q1->front->j->memory_needed && available_devices >= hold_q1->front->j->max_device){
-                    enqueue(rdy_q,dequeue(hold_q1)->j);
-                }
-                printf("exit1\n");
+            //printf("time_left: %d\n", next_time);
 
-                while(hold_q2->front != NULL && available_memory >= hold_q2->front->j->memory_needed && available_devices >= hold_q2->front->j->max_device){
-                    enqueue(rdy_q,dequeue(hold_q2)->j);
-                }
-
-                while(waitq->front != NULL && available_devices >= waitq->front->j->max_device){
-                    enqueue(rdy_q,dequeue(waitq)->j);
-                }
-                job_released = 0;
-            }
 
 
 
 
         }
-        printf("exit\n");
+        
 
     }
         
