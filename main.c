@@ -249,6 +249,7 @@ int main(int argc, char ** argv){
                     j->max_device = attributes[3];
                     j->runtime_left = attributes[4];
                     j->priority = attributes[5];
+                    j->devices_allocated = 0;
                     //printf("enqueuing job %d in all_jobs\n", j->job_num);
                     enqueue(all_jobs,j);
                     if(j->memory_needed > available_memory && j->priority == 1){
@@ -277,9 +278,13 @@ int main(int argc, char ** argv){
                 attributes = (int*)malloc(sizeof(int)*3);
 
                 return_args(line,attributes);
+                
                 available_devices -= attributes[2];
-                rdy_q->front->j->devices_allocated += attributes[2];
+               
+                if(rdy_q->front != NULL)
+                    rdy_q->front->j->devices_allocated += attributes[2];
                 //print_array(attributes,3);
+             
             }
             else if(line[0] == 'L'){
                 printf("L\n");                        //TODO   
@@ -299,8 +304,11 @@ int main(int argc, char ** argv){
                 printf("error. invalid line in file\n");
             }
         while(rdy_q->front!= NULL && next_time > 0 ){
-            if(next_time > 1)
-               // printf("next_time: %d\n",next_time);
+            while(rdy_q->front!=NULL && available_devices < rdy_q->front->j->max_device){
+                    
+                    enqueue(waitq,dequeue(rdy_q)->j);
+            }
+            
             if(job_released){
                 while(hold_q1->front != NULL && available_memory >= hold_q1->front->j->memory_needed && available_devices >= hold_q1->front->j->max_device){
                     //printf("enqueuing job %d in rdy_q from hq_1\n", hold_q1->front->j->job_num);
@@ -316,6 +324,7 @@ int main(int argc, char ** argv){
                     //printf("enqueuing job %d in rdy_q from wait_q\n", waitq->front->j->job_num);
                     enqueue(rdy_q,dequeue(waitq)->j);
                 }
+               
                 job_released = 0;
             }
             
@@ -323,11 +332,14 @@ int main(int argc, char ** argv){
         and we can finish executing the entire job before the next task comes in */
             if(rdy_q->front != NULL && rdy_q->front->j->quantum_left <= next_time && rdy_q->front->j->runtime_left <= rdy_q->front->j->quantum_left){
                 next_time -= rdy_q->front->j->runtime_left;
+                
                 available_memory += rdy_q->front->j->memory_needed;
                 available_devices += rdy_q->front->j->devices_allocated;
                 job_released = 1;
+                
                 //printf("enqueuing job %d in complete q from rdy_q\n", rdy_q->front->j->job_num);
                 enqueue(complete_q,dequeue(rdy_q)->j);
+                
             }
             /*if we can finish the quantum before the next task comes in
              but our job won't finish executing in one quantum*/
@@ -337,12 +349,15 @@ int main(int argc, char ** argv){
                 rdy_q->front->j->quantum_left = quantum_time;
                 //printf("enqueuing job %d in rdy from rdy_q\n", rdy_q->front->j->job_num);
                 enqueue(rdy_q,dequeue(rdy_q)->j);
+                 
             }
-            else if(  rdy_q->front->j->quantum_left > next_time){
+           
+            else if( rdy_q->front!= NULL && rdy_q->front->j->quantum_left > next_time){
                 rdy_q->front->j->runtime_left -= next_time;
                 rdy_q->front->j->quantum_left -= next_time;
                 next_time = 0;
             }
+           
             //printf("time_left: %d\n", next_time);
 
 
