@@ -10,6 +10,7 @@ int total_devices;
 int available_devices;
 int quantum_time;
 int next_time; // the time between now, and when the next thing arrives
+int job_released = 0;
 
 typedef struct{
     int job_num;
@@ -128,19 +129,20 @@ void sort(struct Node** head_ref){
   *head_ref = recurSelectionSort(*head_ref);
 }
 
-void print_queue(Queue * q){
+char * print_queue(Queue * q, char * buffer){
+    int offset = 0;
     struct Node * curr = q->front;
+    offset+=snprintf(buffer+offset,sizeof(buffer)-offset,"[");
     while(curr != NULL){
-        printf("---------------------\n");
-        printf("job_num: %d ", curr->j->job_num);
-        printf("job_mem: %d ", curr->j->memory_needed);
-        printf("job_max_dev: %d ", curr->j->max_device);
-        printf("run_time_left: %d ", curr->j->runtime_left);
-        printf("job_priority: %d ", curr->j->priority);
-        printf("\n---------------------\n");
-        curr = curr->next;
+        if(curr->next != NULL){
+            offset += snprintf(buffer+offset,sizeof(buffer)-offset,"%d,",q->front->j->job_num);
+        }else{
 
+            offset += snprintf(buffer+offset,sizeof(buffer)-offset,"%d",q->front->j->job_num);
+        }
     }
+    offset+=snprintf(buffer+offset,sizeof(buffer)-offset,"]");
+    return buffer;
 }
 
 void print_array(int * arr,int size){
@@ -236,7 +238,7 @@ int main(int argc, char ** argv){
                     if(j->memory_needed > available_memory && j->priority == 1){
                         //printf("adding to hq1\n");
                         enqueue(hold_q1,j);
-                        sort(&(hold_q1->front));                //Sorts SJF
+                        //sort(&(hold_q1->front));                //Sorts SJF
                     }
                     else if(j->memory_needed > available_memory && j->priority == 2){
                         //printf("adding to hq2\n");
@@ -269,22 +271,52 @@ int main(int argc, char ** argv){
             }else{
                 printf("error. invalid line in file\n");
             }
+        printf("enter\n");
+        while(rdy_q->front!= NULL && next_time>0){
+        /*if we can finish our quantum by the time the next task comes in,
+        and we can finish executing the entire job before the next task comes in */
+            if(rdy_q->front != NULL && rdy_q->front->j->quantum_left <= next_time && rdy_q->front->j->runtime_left <= rdy_q->front->j->quantum_left){
+                next_time -= rdy_q->front->j->runtime_left;
+                available_memory += rdy_q->front->j->memory_needed;
+                available_devices += rdy_q->front->j->devices_allocated;
+                job_released = 1;
+                enqueue(complete_q,dequeue(rdy_q)->j);
+            }
+            /*if we can finish the quantum before the next task comes in
+             but our job won't finish executing in one quantum*/
+            else if(rdy_q->front != NULL && rdy_q->front->j->quantum_left <= next_time && rdy_q->front->j->runtime_left > rdy_q->front->j->quantum_left){
+                next_time -= rdy_q->front->j->quantum_left;
+                rdy_q->front->j->runtime_left = quantum_time;
+                enqueue(rdy_q,dequeue(rdy_q)->j);
+            }
+            else if( rdy_q->front != NULL && rdy_q->front->j->quantum_left > next_time ){
+                rdy_q->front->j->runtime_left -= next_time;
+                rdy_q->front->j->quantum_left -= next_time;
+                next_time = 0;
+            }
+            if(job_released){
+                printf("enter1\n");
+                while(hold_q1->front != NULL && available_memory >= hold_q1->front->j->memory_needed && available_devices >= hold_q1->front->j->max_device){
+                    enqueue(rdy_q,dequeue(hold_q1)->j);
+                }
+                printf("exit1\n");
+
+                while(hold_q2->front != NULL && available_memory >= hold_q2->front->j->memory_needed && available_devices >= hold_q2->front->j->max_device){
+                    enqueue(rdy_q,dequeue(hold_q2)->j);
+                }
+
+                while(waitq->front != NULL && available_devices >= waitq->front->j->max_device){
+                    enqueue(rdy_q,dequeue(waitq)->j);
+                }
+                job_released = 0;
+            }
 
 
-            //NEXT WE NEED TO GO TO THE FRONT OF THE READY QUEUE AND IMPLEMENT THAT PART. SEE THE PSUEDO_CODE FILE!!!
-        
-    // printf("--------------------statistics-------------------------\n");
-    // printf("curr_time: %d\navailable_memory: %d\navailable_devices: %d\nnext_time: %d\n", curr_time,available_memory,available_devices,next_time);
-    printf("/////////////////////////////////////////////\n");
-    printf("hold_q1: \n");
-    printf("/////////////////////////////////////////////\n");
-    print_queue(hold_q1); 
-   // printf("hold_q1: \n");
-    // print_queue(hold_q2); 
-    // printf("readyq: \n");
-    // print_queue(rdy_q); 
-    // printf("wait: \n");
-    // print_queue(waitq); 
+
+
+        }
+        printf("exit\n");
+
     }
         
         

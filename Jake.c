@@ -37,9 +37,7 @@ while(next_time > 0){
         RdyQ->front->j->quantum_left -= next_time;
         next_time = 0;
        
-       
-       
-    }
+}
     
     /*the quantum won't be finished by the time the next task comes in 
     also our job won't be done executing by the time the quantum eventually finishes*/
