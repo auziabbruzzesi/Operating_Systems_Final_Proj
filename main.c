@@ -25,6 +25,7 @@ typedef struct{
     int priority;
     int quantum_left;
     int devices_allocated;
+    int arrival_time;
 }Job;
 struct Node{
     Job * j;
@@ -166,6 +167,25 @@ void print_array(int * arr,int size){
     printf("\n");
 }
 void print_jobs(Queue * q, char * buffer){
+    int offset = 0;
+    struct Node * curr = q->front;
+    offset+=snprintf(buffer+offset,STRING_SIZE-offset,"[");
+    while(curr != NULL){
+       // printf("here\n");
+        if(curr->next!= NULL){
+            offset += snprintf(buffer+offset,STRING_SIZE-offset,"{\"arrival_time\": %d,\"devices_allocated\": %d,\"id\":%d,\"remaining_time\":%d},",
+            curr->j->arrival_time,curr->j->devices_allocated,curr->j->job_num,curr->j->runtime_left);
+           // printf("here: %d\n",curr->next->j->job_num);
+        }else{
+            offset += snprintf(buffer+offset,STRING_SIZE-offset,"{\"arrival_time\": %d,\"devices_allocated\": %d,\"id\":%d,\"remaining_time\":%d}",
+            curr->j->arrival_time,curr->j->devices_allocated,curr->j->job_num,curr->j->runtime_left);
+        }
+       curr = curr->next;
+    }
+    offset += snprintf(buffer+offset,STRING_SIZE-offset,"]");
+    //printf("here too\n");
+    return buffer;
+
 
 }
 int get_num(char * string){
@@ -221,7 +241,7 @@ void generateJSON(Queue * hold_q1, Queue * hold_q2, Queue * rdy_q, Queue * waitq
     fprintf(file,"\"running\": %d,",4);
     fprintf(file,"\"submitq\": [],");
     fprintf(file,"\"holdq2\": %s,",print_queue(hold_q2,line));
-    fprintf(file,"\"job\": %s,",print_queue(all_jobs,line));
+    fprintf(file,"\"job\": %s,",print_jobs(all_jobs,line));
     fprintf(file,"\"holdq1\": %s,",print_queue(hold_q1,line));
     fprintf(file,"\"available_devices\": %d,",available_devices);
     fprintf(file,"\"quantum\": %d,",quantum_time);
@@ -282,6 +302,7 @@ int main(int argc, char ** argv){
                     j->runtime_left = attributes[4];
                     j->priority = attributes[5];
                     j->devices_allocated = 0;
+                    j->arrival_time = attributes[0];
                     //printf("enqueuing job %d in all_jobs\n", j->job_num);
                     enqueue(all_jobs,j);
                     if(j->memory_needed > available_memory && j->priority == 1){
