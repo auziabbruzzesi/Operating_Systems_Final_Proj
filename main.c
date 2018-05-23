@@ -166,7 +166,7 @@ void print_array(int * arr,int size){
     }
     printf("\n");
 }
-void print_jobs(Queue * q, char * buffer){
+char * print_jobs(Queue * q, char * buffer){
     int offset = 0;
     struct Node * curr = q->front;
     offset+=snprintf(buffer+offset,STRING_SIZE-offset,"[");
