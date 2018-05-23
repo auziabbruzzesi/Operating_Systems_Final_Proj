@@ -343,6 +343,9 @@ int main(int argc, char ** argv){
                 printf("L\n");                        //TODO   
                 attributes = (int*)malloc(sizeof(int)*3);
                 return_args(line,attributes);
+                available_devices += attributes[2];
+                if(rdy_q->front != NULL)
+                    rdy_q->front->j->devices_allocated -= attributes[2];
 
                 //print_array(attributes,3);
             }
