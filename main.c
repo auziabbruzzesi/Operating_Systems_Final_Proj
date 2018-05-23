@@ -155,7 +155,6 @@ void sort(struct Node** head_ref){
   *head_ref = recurSelectionSort(*head_ref);
 }
 
-
 void print_array(int * arr,int size){
     int i;
     for(i = 0; i < size; i++){
@@ -163,6 +162,9 @@ void print_array(int * arr,int size){
 
     }
     printf("\n");
+}
+void print_jobs(Queue * q, char * buffer){
+    
 }
 int get_num(char * string){
     int i; 
