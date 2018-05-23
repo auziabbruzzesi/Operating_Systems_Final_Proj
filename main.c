@@ -166,12 +166,12 @@ void print_array(int * arr,int size){
     printf("\n");
 }
 void print_jobs(Queue * q, char * buffer){
-    
+
 }
 int get_num(char * string){
     int i; 
     for(i = 0; i<strlen(string); i++){
-        if isdigit(string[i]){
+        if (isdigit(string[i])){
             //printf("digit: %d\n",atoi(&string[i]));
             return atoi(&string[i]);
         }
