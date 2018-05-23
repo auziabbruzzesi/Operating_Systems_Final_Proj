@@ -3,6 +3,8 @@
 #include<string.h>
 #include<ctype.h>
 #define STRING_SIZE 1000000
+
+//test
 int curr_time;
 int total_memory;
 int available_memory;
