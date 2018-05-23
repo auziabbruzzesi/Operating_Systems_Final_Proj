@@ -199,6 +199,34 @@ void return_args (char * line,int * args){
     }
 
 }
+void generateJSON(Queue * hold_q1, Queue * hold_q2, Queue * rdy_q, Queue * waitq, Queue * complete_q, Queue * all_jobs){
+    printf("HI\n");
+    char filename[STRING_SIZE];
+    snprintf(filename, STRING_SIZE,"D%d.json",curr_time);
+    FILE * file;
+    file = fopen(filename,"w");
+    char buffer[33];
+    char line[STRING_SIZE];
+    printf("hi\n");
+    fprintf(file,"{");
+    fprintf(file,"\"readyq\": %s,",print_queue(rdy_q,line));
+    fprintf(file,"\"current_time\": %d,",curr_time);
+    fprintf(file,"\"total_memory\": %d,",total_memory);
+    fprintf(file,"\"available_memory\": %d,",available_memory);
+    fprintf(file,"\"total_devices\": %d,",total_devices);
+    fprintf(file,"\"running\": %d,",4);
+    fprintf(file,"\"submitq\": [],");
+    fprintf(file,"\"holdq2\": %s,",print_queue(hold_q2,line));
+    fprintf(file,"\"job\": %s,",print_queue(all_jobs,line));
+    fprintf(file,"\"holdq1\": %s,",print_queue(hold_q1,line));
+    fprintf(file,"\"available_devices\": %d,",available_devices);
+    fprintf(file,"\"quantum\": %d,",quantum_time);
+    fprintf(file,"\"completeq\": %s,",print_queue(complete_q,line));
+    fprintf(file,"\"waitq\": %s",print_queue(waitq,line));
+    fprintf(file,"}");
+
+    
+}
 int main(int argc, char ** argv){
 
     Queue * submit_q = create_queue();
@@ -295,6 +323,7 @@ int main(int argc, char ** argv){
             }
             else if(line[0] == 'D'){
                 printf("D\n");
+                generateJSON(hold_q1,hold_q2,rdy_q,waitq,complete_q,all_jobs);
                 attributes = (int*)malloc(sizeof(int));
                 return_args(line,attributes);
                 
