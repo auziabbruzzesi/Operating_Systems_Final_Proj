@@ -70,8 +70,31 @@ Queue * create_queue(){
     return q;
 }
 
-void enqueue(Queue * q, Job * j){
-   // printf("before enqueue: %s\n", print_queue(q,buffer));
+void sortedInsert(struct Node** head_ref, struct Node* new_node)
+{
+    struct Node* current;
+    struct Node* temp;
+    /* Special case for the head end */
+    if (*head_ref == NULL || (*head_ref)->j->runtime_left <= new_node->j->runtime_left)
+    {
+        new_node->next = *head_ref;
+        *head_ref = new_node;
+    }
+    else
+    {
+        /* Locate the node before the point of insertion */
+        current = *head_ref;
+        while (current->next!=NULL &&
+               current->next->j->runtime_left > new_node->j->runtime_left)
+        {
+            current = current->next;
+        }
+        
+        new_node->next = current->next;
+        current->next = new_node;
+    }
+}
+void enqueueH1(Queue * q, Job * j){
     struct Node * temp = create_node();
     temp->j = j;
     
@@ -81,12 +104,46 @@ void enqueue(Queue * q, Job * j){
     q->rear->next = temp;
     q->rear = temp;
     q->rear->next = NULL;
-    //printf("after enqueue: %s\n", print_queue(q,buffer));
 
+     struct Node *sorted = NULL;
+     struct Node *current = (q->front);
+     while (current != NULL)
 
+     {
+         // Store next for next iteration
+         struct Node *next = current->next;
+  
+         // insert current in sorted linked list
+         sortedInsert(&sorted, current);
+  
+         // Update current
+         current = next;
+     }
+  
+     // Update head_ref to point to sorted linked list
+     (q->front) = sorted;
+ 
+     
     
+    return;
 
 }
+
+void enqueue(Queue * q, Job * j){
+    // printf("before enqueue: %s\n", print_queue(q,buffer));
+     struct Node * temp = create_node();
+     temp->j = j;
+     
+     if(q->front == NULL){
+         q->front = q->rear = temp;
+     }
+     q->rear->next = temp;
+     q->rear = temp;
+     q->rear->next = NULL;
+     //printf("after enqueue: %s\n", print_queue(q,buffer));
+   
+ 
+ }
 
 struct Node * dequeue (Queue * q){
     if (q->front == NULL)
@@ -97,67 +154,6 @@ struct Node * dequeue (Queue * q){
        q->rear = NULL;
     
     return temp;
-}
-void swapNodes(struct Node** head_ref, struct Node* currX,
-               struct Node* currY, struct Node* prevY){
-  /* Methods for Sorting Linked Lists */
-  // function to swap nodes 'currX' and 'currY' in a
-  // linked list without swapping data
-  // make 'currY' as new head
-  *head_ref = currY;
-
-  // adjust links
-  prevY->next = currX;
-
-  // Swap next pointers
-  struct Node* temp = currY->next;
-  currY->next = currX->next;
-  currX->next = temp;
-}
-struct Node* recurSelectionSort(struct Node* head){
-  /*Sort queue for SJF */
-  // if there is only a single node
-  if (head->next == NULL)
-  return head;
-
-  // 'min' - pointer to store the node having
-  // minimum data value
-  struct Node* min = head;
-
-  // 'beforeMin' - pointer to store node previous
-  // to 'min' node
-  struct Node* beforeMin = NULL;
-  struct Node* ptr;
-
-  // traverse the list till the last node
-  for (ptr = head; ptr->next != NULL; ptr = ptr->next) {
-
-    // if true, then update 'min' and 'beforeMin'
-    if (ptr->next->j->runtime_left > min->j->runtime_left) {
-    min = ptr->next;
-    beforeMin = ptr;
-    }
-  }
-
-  // if 'min' and 'head' are not same,
-  // swap the head node with the 'min' node
-  if (min != head)
-   swapNodes(&head, head, min, beforeMin);
-
-  // recursively sort the remaining list
-  head->next = recurSelectionSort(head->next);
-
-  return head;
-}
-void sort(struct Node** head_ref){
-  // function to sort the given linked list
-  // if list is empty
-  if ((*head_ref) == NULL)
-  return;
-
-  // sort the list using recursive selection
-  // sort technique
-  *head_ref = recurSelectionSort(*head_ref);
 }
 
 void print_array(int * arr,int size){
@@ -328,7 +324,7 @@ int main(int argc, char ** argv){
                     if(j->memory_needed > available_memory && j->priority == 1){
                         //printf("adding to hq1\n");
                         //printf("enqueuing job %d in hold q1\n", j->job_num);
-                        enqueue(hold_q1,j);
+                        enqueueH1(hold_q1,j);
                         //sort(&(hold_q1->front));                //Sorts SJF
                     }
                     else if(j->memory_needed > available_memory && j->priority == 2){
@@ -450,13 +446,39 @@ int main(int argc, char ** argv){
 
         }
         char buffer[STRING_SIZE];
-        printf("rdy: %s\n",print_queue(rdy_q,buffer));
-        printf("hq1: %s\n",print_queue(hold_q1,buffer));
-        printf("hq2: %s\n",print_queue(hold_q2 ,buffer));
-        printf("waitq: %s\n",print_queue(waitq,buffer));
-         printf("completeq: %s\n",print_queue(complete_q,buffer));
+        // printf("rdy: %s\n",print_queue(rdy_q,buffer));
+        // printf("hq1: %s\n",print_queue(hold_q1,buffer));
+        // printf("hq2: %s\n",print_queue(hold_q2 ,buffer));
+        // printf("waitq: %s\n",print_queue(waitq,buffer));
+        //  printf("completeq: %s\n",print_queue(complete_q,buffer));
         //sort(&(all_jobs->front));
+        /*Queue testing */
+    // char Buffer[STRING_SIZE];
+    // Job * a = create_job();
+    // a->runtime_left = 10;
+    // a->job_num=10;
+    // a->priority=1;
+    // Job * b = create_job();
+    // b->runtime_left = 4;
+    // b->job_num=4;
+    // b->priority=1;
+    // Job * c = create_job();
+    // c->runtime_left = 9;
+    // c->job_num=9;
+    // c->priority=1;
+    
 
+    //     Queue * test_q = create_queue();
+    //     printf("Job with runtime = 10 added\n");
+    //     enqueue(test_q, a);
+    //     printf("%s", print_queue(test_q, Buffer));
+    //     printf("Job with runtime = 4 added\n");
+    //     enqueue(test_q, b);
+    //     printf("%s", print_queue(test_q, Buffer));
+    //     printf("Job with runtime = 9 added\n");
+    //     enqueue(test_q, c);
+    //     printf("%s", print_queue(test_q, Buffer));
+       
     }
     
         
