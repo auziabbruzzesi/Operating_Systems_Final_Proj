@@ -133,7 +133,7 @@ struct Node* recurSelectionSort(struct Node* head){
   for (ptr = head; ptr->next != NULL; ptr = ptr->next) {
 
     // if true, then update 'min' and 'beforeMin'
-    if (ptr->next->j->runtime_left < min->j->runtime_left) {
+    if (ptr->next->j->runtime_left > min->j->runtime_left) {
     min = ptr->next;
     beforeMin = ptr;
     }
@@ -311,7 +311,7 @@ int main(int argc, char ** argv){
                         //printf("adding to hq1\n");
                         //printf("enqueuing job %d in hold q1\n", j->job_num);
                         enqueue(hold_q1,j);
-                        //sort(&(hold_q1->front));                //Sorts SJF
+                        sort(&(hold_q1->front));                //Sorts SJF
                     }
                     else if(j->memory_needed > available_memory && j->priority == 2){
                         //printf("adding to hq2\n");
