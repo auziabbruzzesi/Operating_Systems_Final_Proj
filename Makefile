@@ -7,4 +7,4 @@ main_compile: main.c;
 exec: main_compile;
 	./simulation.exe
 clean:
-	rm *.exe
+	rm *.exe *.json
