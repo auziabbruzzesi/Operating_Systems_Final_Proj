@@ -13,9 +13,10 @@ int available_devices;
 int quantum_time;
 int next_time; // the time between now, and when the next thing arrives
 int job_released = 0;
+int final_json = 0;
 
 
-char buffer[100000];
+char buffer[STRING_SIZE];
 
 typedef struct{
     int job_num;
