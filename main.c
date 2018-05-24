@@ -26,6 +26,7 @@ typedef struct{
     int quantum_left;
     int devices_allocated;
     int arrival_time;
+    int completion_time;
 }Job;
 struct Node{
     Job * j;
