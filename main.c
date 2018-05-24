@@ -171,18 +171,35 @@ void print_array(int * arr,int size){
 char * print_jobs(Queue * q, char * buffer){
     int offset = 0;
     struct Node * curr = q->front;
+    
     offset+=snprintf(buffer+offset,STRING_SIZE-offset,"[");
-    while(curr != NULL){
-       // printf("here\n");
-        if(curr->next!= NULL){
-            offset += snprintf(buffer+offset,STRING_SIZE-offset,"{\"arrival_time\": %d,\"devices_allocated\": %d,\"id\":%d,\"remaining_time\":%d},",
-            curr->j->arrival_time,curr->j->devices_allocated,curr->j->job_num,curr->j->runtime_left);
-           // printf("here: %d\n",curr->next->j->job_num);
-        }else{
-            offset += snprintf(buffer+offset,STRING_SIZE-offset,"{\"arrival_time\": %d,\"devices_allocated\": %d,\"id\":%d,\"remaining_time\":%d}",
-            curr->j->arrival_time,curr->j->devices_allocated,curr->j->job_num,curr->j->runtime_left);
+    if(!final_json){
+        while(curr != NULL){
+        // printf("here\n");
+            if(curr->next!= NULL){
+                offset += snprintf(buffer+offset,STRING_SIZE-offset,"{\"arrival_time\": %d,\"devices_allocated\": %d,\"id\":%d,\"remaining_time\":%d},",
+                curr->j->arrival_time,curr->j->devices_allocated,curr->j->job_num,curr->j->runtime_left);
+            // printf("here: %d\n",curr->next->j->job_num);
+            }else{
+                offset += snprintf(buffer+offset,STRING_SIZE-offset,"{\"arrival_time\": %d,\"devices_allocated\": %d,\"id\":%d,\"remaining_time\":%d}",
+                curr->j->arrival_time,curr->j->devices_allocated,curr->j->job_num,curr->j->runtime_left);
+            }
+        curr = curr->next;
         }
-       curr = curr->next;
+    }else{
+        while(curr != NULL){
+        // printf("here\n");
+            if(curr->next!= NULL){
+                offset += snprintf(buffer+offset,STRING_SIZE-offset,"{\"arrival_time\": %d,\"id\":%d,\"remaining_time\":%d,\"completion_time\":%d},",
+                curr->j->arrival_time,curr->j->job_num,curr->j->runtime_left,curr->j->completion_time);
+            // printf("here: %d\n",curr->next->j->job_num);
+            }else{
+               offset += snprintf(buffer+offset,STRING_SIZE-offset,"{\"arrival_time\": %d,\"id\":%d,\"remaining_time\":%d,\"completion_time\":%d}",
+                curr->j->arrival_time,curr->j->job_num,curr->j->runtime_left,curr->j->completion_time);
+            }
+            curr = curr->next;
+        }
+
     }
     offset += snprintf(buffer+offset,STRING_SIZE-offset,"]");
     //printf("here too\n");
@@ -231,7 +248,6 @@ void generateJSON(Queue * hold_q1, Queue * hold_q2, Queue * rdy_q, Queue * waitq
     snprintf(filename, STRING_SIZE,"D%d.json",curr_time);
     FILE * file;
     file = fopen(filename,"w");
-    char buffer[33];
     char line[STRING_SIZE];
     printf("hi\n");
     fprintf(file,"{");
@@ -240,7 +256,9 @@ void generateJSON(Queue * hold_q1, Queue * hold_q2, Queue * rdy_q, Queue * waitq
     fprintf(file,"\"total_memory\": %d,",total_memory);
     fprintf(file,"\"available_memory\": %d,",available_memory);
     fprintf(file,"\"total_devices\": %d,",total_devices);
-    fprintf(file,"\"running\": %d,",4);
+    if(!final_json && rdy_q->front != NULL){
+        fprintf(file,"\"running\": %d,",rdy_q->front->j->job_num);
+    }
     fprintf(file,"\"submitq\": [],");
     fprintf(file,"\"holdq2\": %s,",print_queue(hold_q2,line));
     fprintf(file,"\"job\": %s,",print_jobs(all_jobs,line));
@@ -311,7 +329,7 @@ int main(int argc, char ** argv){
                         //printf("adding to hq1\n");
                         //printf("enqueuing job %d in hold q1\n", j->job_num);
                         enqueue(hold_q1,j);
-                        sort(&(hold_q1->front));                //Sorts SJF
+                        //sort(&(hold_q1->front));                //Sorts SJF
                     }
                     else if(j->memory_needed > available_memory && j->priority == 2){
                         //printf("adding to hq2\n");
@@ -353,9 +371,13 @@ int main(int argc, char ** argv){
             }
             else if(line[0] == 'D'){
                 printf("D\n");
-                generateJSON(hold_q1,hold_q2,rdy_q,waitq,complete_q,all_jobs);
+                
                 attributes = (int*)malloc(sizeof(int));
                 return_args(line,attributes);
+                if(attributes[0] == 9999){
+                    final_json = 1;
+                } 
+                generateJSON(hold_q1,hold_q2,rdy_q,waitq,complete_q,all_jobs);
                 
                 
                 //print_array(attributes,1);
@@ -397,7 +419,10 @@ int main(int argc, char ** argv){
                 job_released = 1;
                 
                 //printf("enqueuing job %d in complete q from rdy_q\n", rdy_q->front->j->job_num);
+                rdy_q->front->j->runtime_left = 0;
+                rdy_q->front->j->completion_time = get_time(line2) - next_time;
                 enqueue(complete_q,dequeue(rdy_q)->j);
+
                 
             }
             /*if we can finish the quantum before the next task comes in
@@ -430,9 +455,10 @@ int main(int argc, char ** argv){
         printf("hq2: %s\n",print_queue(hold_q2 ,buffer));
         printf("waitq: %s\n",print_queue(waitq,buffer));
          printf("completeq: %s\n",print_queue(complete_q,buffer));
-
+        //sort(&(all_jobs->front));
 
     }
+    
         
         
     }
